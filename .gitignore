@@ -1,0 +1,94 @@
+# =========================
+# Build / Output
+# =========================
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+artifacts/
+
+# =========================
+# Visual Studio / IDE
+# =========================
+.vs/
+*.suo
+*.user
+*.rsuser
+*.sln.docstates
+.vscode/
+
+# =========================
+# EF Core / Database
+# =========================
+# Optional: ignore migrations if you regenerate them in dev
+#Migrations/
+*.mdf
+*.ldf
+*.ndf
+
+# =========================
+# NuGet Packages
+# =========================
+*.nupkg
+**/[Pp]ackages/*
+*.snupkg
+
+# =========================
+# Logs
+# =========================
+*.log
+Logs/
+
+# =========================
+# Secrets / Local config
+# =========================
+appsettings.*.json
+secret.json
+
+# =========================
+# Node / Frontend (if any)
+# =========================
+node_modules/
+
+# =========================
+# OS / Temporary
+# =========================
+.DS_Store
+Thumbs.db
+~$*
+
+# =========================
+# Test / Coverage (optional)
+# =========================
+*.coverage
+*.coveragexml
+coverage*.json
+coverage*.xml
+coverage*.info
+*.VisualState.xml
+TestResult.xml
+nunit-*.xml
+
+# =========================
+# Optional: other tools / IDEs
+# =========================
+.idea/
+*.iml
+.paket/
+.paket/paket.exe
+paket-files/
+.fake/
+.mfractor/
+.ionide/
+
+# =========================
+# Optional: Web / Publish
+# =========================
+publish/
+*.publishsettings
+*.pubxml
+*.azurePubxml
+*.appx
+*.appxbundle
+AppPackages/
+BundleArtifacts/

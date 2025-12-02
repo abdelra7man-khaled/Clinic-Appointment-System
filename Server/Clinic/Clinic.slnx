@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Clinic.DataAccess/Clinic.DataAccess.csproj" />
+  <Project Path="Clinic.Models/Clinic.Models.csproj" />
+  <Project Path="ClinicAppointmentSystem/ClinicAppointmentSystem.csproj" />
+</Solution>
