@@ -78,57 +78,29 @@ namespace ClinicAppointmentSystem.Controllers
             return Ok(newSpecialty);
         }
 
-        [HttpGet("doctors/{id}")]
-        public IActionResult GetDoctor(int id)
+        [HttpDelete("doctors/{id}/delete")]
+        public async Task<IActionResult> DeleteDoctor(int id)
         {
-            var doctor = _unitOfWork.Doctors.Query()
-                                    .Include(d => d.User)
-                                    .Include(d => d.DoctorSpecialties)
-                                    .ThenInclude(ds => ds.Specialty)
-                                    .FirstOrDefault(d => d.Id == id);
-
-            if (doctor is null)
-                return NotFound("Doctor not found");
-
-            return Ok(new
-            {
-                doctor.Id,
-                doctor.FullName,
-                doctor.Biography,
-                Specialties = doctor.DoctorSpecialties
-                                    .Select(s => s.Specialty.Name)
-                                    .ToList()
-            });
-        }
-
-
-        [HttpPut("doctors/{id}/update/specialties")]
-        public async Task<IActionResult> UpdateDoctorSpecialties(int id, [FromBody] UpdateDoctorSpecialtiesDto newSpecialtiesDto)
-        {
-            var doctor = _unitOfWork.Doctors.Query()
-                .Include(d => d.DoctorSpecialties)
-                .FirstOrDefault(d => d.Id == id);
-
+            var doctor = await _unitOfWork.Doctors.GetAsync(id);
             if (doctor == null)
                 return NotFound("Doctor not found");
 
-            var oldSpecialties = doctor.DoctorSpecialties.ToList();
-            foreach (var s in oldSpecialties)
-                _unitOfWork.DoctorSpecialties.Remove(s);
 
-            foreach (var specialtyId in newSpecialtiesDto.SpecialtyIds)
-            {
-                await _unitOfWork.DoctorSpecialties.AddAsync(new DoctorSpecialty
-                {
-                    DoctorId = doctor.Id,
-                    SpecialtyId = specialtyId
-                });
-            }
+            var appointments = _unitOfWork.Appointments.Query()
+                .Where(a => a.DoctorId == doctor.Id)
+                .ToList();
+            _unitOfWork.Appointments.RemoveRange(appointments);
 
+            var specialties = _unitOfWork.DoctorSpecialties.Query()
+                .Where(ds => ds.DoctorId == doctor.Id)
+                .ToList();
+            _unitOfWork.DoctorSpecialties.RemoveRange(specialties);
+
+
+            _unitOfWork.Doctors.Remove(doctor);
             await _unitOfWork.SaveChangesAsync();
-            return Ok("Doctor specialties updated successfully");
+
+            return Ok(new { Message = "Doctor deleted successfully" });
         }
-
-
     }
 }
