@@ -24,7 +24,7 @@ namespace ClinicAppointmentSystem.Controllers
             {
                 patient.Id,
                 patient.FullName,
-                patient.Phone,
+                patient.PhoneNumber,
                 patient.DateOfBirth,
                 Email = patient.User.Email
             });
