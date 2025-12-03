@@ -31,7 +31,7 @@ namespace ClinicAppointmentSystem.Controllers
         }
 
 
-        [HttpPost("appointments")]
+        [HttpPost("appointments/book")]
         public async Task<IActionResult> Book([FromBody] AppointmentCreateDto appointmentRequest)
         {
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
@@ -63,6 +63,53 @@ namespace ClinicAppointmentSystem.Controllers
             await _unitOfWork.Appointments.AddAsync(newAppointment);
             await _unitOfWork.SaveChangesAsync();
             return Ok(newAppointment);
+        }
+
+        [HttpGet("appointments")]
+        public IActionResult MyAppointments()
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var patient = _unitOfWork.Patients.Query()
+                                    .Include(p => p.Appointments)
+                                    .ThenInclude(a => a.Doctor)
+                                    .FirstOrDefault(p => p.UserId == userId);
+
+            if (patient is null)
+                return NotFound("patient not found");
+
+            return Ok(patient.Appointments
+                .OrderBy(a => a.StartTime)
+                .Select(a => new
+                {
+                    DoctorName = a.Doctor.FullName,
+                    a.StartTime,
+                    a.EndTime,
+                    a.Status,
+                    a.Fee,
+                    a.Notes
+                }));
+        }
+
+        [HttpPost("appointments/{id}/cancel")]
+        public async Task<IActionResult> CancelAppointment(int id)
+        {
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.UserId == userId);
+            if (patient is null)
+                return BadRequest("Patient not found");
+
+            var appointment = _unitOfWork.Appointments.Query()
+                .FirstOrDefault(a => a.Id == id && a.PatientId == patient.Id);
+
+            if (appointment is null)
+                return NotFound("Appointment not found");
+
+            appointment.Status = AppointmentStatus.Cancelled;
+            _unitOfWork.Appointments.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Ok(new { message = "Appointment cancelled successfully", appointment });
         }
     }
 }
