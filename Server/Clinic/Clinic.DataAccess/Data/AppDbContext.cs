@@ -49,8 +49,8 @@ namespace Clinic.DataAccess.Data
 
             modelBuilder.Entity<Appointment>()
                          .HasOne(a => a.Patient)
-                         .WithOne(p => p.Appointment)
-                         .HasForeignKey<Appointment>(a => a.PatientId)
+                         .WithMany(p => p.Appointments)
+                         .HasForeignKey(a => a.PatientId)
                          .OnDelete(DeleteBehavior.ClientSetNull);
 
             modelBuilder.Entity<ApplicationUser>().HasIndex(u => u.Username).IsUnique();

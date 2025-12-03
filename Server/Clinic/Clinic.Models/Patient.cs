@@ -12,6 +12,6 @@ namespace Clinic.Models
         public string PhoneNumber { get; set; }
         public DateTime? DateOfBirth { get; set; }
 
-        public Appointment Appointment { get; set; }
+        public ICollection<Appointment> Appointments { get; set; }
     }
 }
