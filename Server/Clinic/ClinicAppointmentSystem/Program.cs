@@ -1,4 +1,6 @@
 using Clinic.DataAccess.Data;
+using Clinic.DataAccess.Repository;
+using Clinic.DataAccess.Repository.IRepository;
 using Microsoft.EntityFrameworkCore;
 
 namespace ClinicAppointmentSystem
@@ -19,6 +21,7 @@ namespace ClinicAppointmentSystem
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
+            builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             var app = builder.Build();
 
