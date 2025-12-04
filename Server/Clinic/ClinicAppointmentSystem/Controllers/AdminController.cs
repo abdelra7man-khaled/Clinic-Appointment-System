@@ -12,6 +12,27 @@ namespace ClinicAppointmentSystem.Controllers
     [ApiController]
     public class AdminController(IUnitOfWork _unitOfWork) : ControllerBase
     {
+
+        [HttpGet("doctors")]
+        public IActionResult GetAllDoctors()
+        {
+            var doctors = _unitOfWork.Doctors.Query()
+                        .Include(d => d.User)
+                        .Include(d => d.DoctorSpecialties)
+                        .ThenInclude(ds => ds.Specialty)
+                        .ToList()
+                        .Select(d => new
+                        {
+                            d.Id,
+                            d.FullName,
+                            d.Biography,
+                            Email = d.User.Email,
+                            Specialties = d.DoctorSpecialties.Select(ds => ds.Specialty.Name).ToList()
+                        });
+
+            return Ok(doctors);
+        }
+
         [HttpPost("add/doctors")]
         public async Task<IActionResult> AddDoctor([FromBody] AddDoctorDto doctorDto)
         {
@@ -58,13 +79,6 @@ namespace ClinicAppointmentSystem.Controllers
             });
         }
 
-
-
-        [HttpGet("doctors")]
-        public IActionResult GetAllDoctors()
-        {
-            return Ok(_unitOfWork.Doctors.Query().Include(d => d.User).ToList());
-        }
 
         [HttpPost("add/specialty")]
         public async Task<IActionResult> AddSpecialty([FromBody] Specialty newSpecialty)
