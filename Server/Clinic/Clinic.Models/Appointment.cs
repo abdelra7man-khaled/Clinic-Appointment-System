@@ -15,6 +15,7 @@ namespace Clinic.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public AppointmentStatus Status { get; set; }
+        public AppointmentType AppointmentType { get; set; }
         public decimal Fee { get; set; }
         public string Notes { get; set; }
     }

@@ -13,8 +13,8 @@ namespace ClinicAppointmentSystem.Controllers
         public IActionResult DoctorSchedule(int doctorId, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
             var query = _unitOfWork.Appointments.Query()
-                .Include(a => a.Patient)
-                .Where(a => a.DoctorId == doctorId);
+                                    .Include(a => a.Patient)
+                                    .Where(a => a.DoctorId == doctorId);
 
             if (dateFrom.HasValue)
                 query = query.Where(a => a.StartTime >= dateFrom.Value);
@@ -28,7 +28,7 @@ namespace ClinicAppointmentSystem.Controllers
         public async Task<IActionResult> ConfirmAppointment(int id)
         {
             var appointment = await _unitOfWork.Appointments.GetAsync(id);
-            if (appointment == null)
+            if (appointment is null)
                 return NotFound("Appointment not found");
 
             appointment.Status = AppointmentStatus.Confirmed;
@@ -53,12 +53,12 @@ namespace ClinicAppointmentSystem.Controllers
         public async Task<IActionResult> DeleteAppointment(int id)
         {
             var appointment = await _unitOfWork.Appointments.GetAsync(id);
-            if (appointment == null)
+            if (appointment is null)
                 return NotFound("Appointment not found");
 
             var payment = _unitOfWork.Payments.Query()
-                .FirstOrDefault(p => p.AppointmentId == appointment.Id);
-            if (payment != null)
+                                     .FirstOrDefault(p => p.AppointmentId == appointment.Id);
+            if (payment is not null)
                 _unitOfWork.Payments.Remove(payment);
 
             _unitOfWork.Appointments.Remove(appointment);

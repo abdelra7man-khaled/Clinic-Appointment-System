@@ -1,7 +1,7 @@
 ﻿using Clinic.DataAccess.Repository.IRepository;
-using Clinic.Models;
 using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
+using Clinic.Services.Appointments;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -25,7 +25,7 @@ namespace ClinicAppointmentSystem.Controllers
                 patient.Id,
                 patient.FullName,
                 patient.PhoneNumber,
-                patient.DateOfBirth,
+                patient.Balance,
                 Email = patient.User.Email
             });
         }
@@ -49,16 +49,15 @@ namespace ClinicAppointmentSystem.Controllers
                 return BadRequest("Time slot not available");
 
 
-            var newAppointment = new Appointment
-            {
-                PatientId = patient.Id,
-                DoctorId = appointmentRequest.DoctorId,
-                StartTime = appointmentRequest.StartTime,
-                EndTime = appointmentRequest.EndTime,
-                Status = AppointmentStatus.Pending,
-                Fee = appointmentRequest.Fee,
-                Notes = appointmentRequest.Notes
-            };
+            var newAppointment = AppointmentFactory.CreateAppointment(
+                appointmentRequest.AppointmentType,
+                patient.Id,
+                appointmentRequest.DoctorId,
+                appointmentRequest.StartTime,
+                appointmentRequest.EndTime,
+                appointmentRequest.Fee,
+                appointmentRequest.Notes
+            );
 
             await _unitOfWork.Appointments.AddAsync(newAppointment);
             await _unitOfWork.SaveChangesAsync();

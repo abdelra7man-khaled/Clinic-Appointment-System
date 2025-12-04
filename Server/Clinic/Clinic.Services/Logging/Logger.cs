@@ -27,17 +27,17 @@
 
         public void Log(string message, LogType logtype)
         {
-            if (logtype == LogType.Info)
+            if (logtype == LogType.INFO)
             {
                 Console.ForegroundColor = ConsoleColor.Gray;
                 Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
             }
-            else if (logtype == LogType.Success)
+            else if (logtype == LogType.SUCCESS)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
                 Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
             }
-            else if (logtype == LogType.Error)
+            else if (logtype == LogType.ERROR)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
@@ -54,21 +54,21 @@
 
         public void LogInfo(string message)
         {
-            Log(message, LogType.Info);
+            Log(message, LogType.INFO);
         }
 
         public void LogSuccess(string message)
         {
-            Log(message, LogType.Success);
+            Log(message, LogType.SUCCESS);
         }
         public void LogError(string message)
         {
-            Log(message, LogType.Error);
+            Log(message, LogType.ERROR);
         }
 
         public void LogWarning(string message)
         {
-            Log(message, LogType.Warning);
+            Log(message, LogType.WARNING);
         }
     }
 }

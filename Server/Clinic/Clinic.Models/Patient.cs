@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Clinic.Models
 {
@@ -10,7 +11,8 @@ namespace Clinic.Models
         public ApplicationUser User { get; set; }
         public string FullName { get; set; }
         public string PhoneNumber { get; set; }
-        public DateTime? DateOfBirth { get; set; }
+        [Required]
+        public decimal Balance { get; set; }
 
         public ICollection<Appointment> Appointments { get; set; }
     }
