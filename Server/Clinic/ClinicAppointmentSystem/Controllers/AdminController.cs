@@ -37,10 +37,10 @@ namespace ClinicAppointmentSystem.Controllers
             return Ok(doctors);
         }
 
-        [HttpPost("add/doctors")]
+        [HttpPost("add/doctor")]
         public async Task<IActionResult> AddDoctor([FromBody] AddDoctorDto doctorDto)
         {
-            Logger.Instance.LogInfo("/admin/add/doctors/ - Add new doctor");
+            Logger.Instance.LogInfo("/admin/add/doctor/ - Add new doctor");
 
             var user = new ApplicationUser
             {
@@ -52,7 +52,6 @@ namespace ClinicAppointmentSystem.Controllers
 
             await _unitOfWork.Users.AddAsync(user);
             await _unitOfWork.SaveChangesAsync();
-
 
             var newDoctor = new Doctor
             {
@@ -77,6 +76,8 @@ namespace ClinicAppointmentSystem.Controllers
                 await _unitOfWork.SaveChangesAsync();
             }
 
+            Logger.Instance.LogSuccess("/admin/add/doctor/ - Doctor added successfully");
+
             return Ok(new
             {
                 Message = "Doctor added successfully",
@@ -84,25 +85,72 @@ namespace ClinicAppointmentSystem.Controllers
             });
         }
 
+        [HttpGet("specialties")]
+        public IActionResult GetAllSpecialties()
+        {
+            Logger.Instance.LogInfo("/admin/specialties - Fetch all specialties");
 
-        [HttpPost("add/specialty")]
+            var specialties = _unitOfWork.Specialties.Query()
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name
+                })
+                .ToList();
+
+            Logger.Instance.LogSuccess($"/admin/specialties - Returned {specialties.Count} specialties");
+
+            return Ok(specialties);
+        }
+
+        [HttpGet("specialties/{id}")]
+        public IActionResult GetSpecialtyById(int id)
+        {
+            Logger.Instance.LogInfo($"/admin/specialties/{id} - Fetch specialty");
+
+            var specialties = _unitOfWork.Specialties.Query()
+                .Select(s => new
+                {
+                    s.Id,
+                    s.Name
+                })
+                .ToList();
+
+            Logger.Instance.LogSuccess($"/admin/specialties/{id} - Returned Required specialty successfully");
+
+            return Ok(specialties);
+        }
+
+        [HttpPost("specialty/add")]
         public async Task<IActionResult> AddSpecialty([FromBody] Specialty newSpecialty)
         {
+            Logger.Instance.LogInfo("/admin/add/specialty/ - Add new specialty");
+
             if (string.IsNullOrWhiteSpace(newSpecialty.Name))
-                return BadRequest("Specialty name is required");
+            {
+                Logger.Instance.LogError("/admin/add/specialty/ - Specialty name is required");
+                return BadRequest();
+            }
 
             await _unitOfWork.Specialties.AddAsync(newSpecialty);
             await _unitOfWork.SaveChangesAsync();
 
+            Logger.Instance.LogSuccess("/admin/add/specialty/ - Specialty added successfully");
+
             return Ok(newSpecialty);
         }
 
-        [HttpDelete("doctors/{id}/delete")]
+        [HttpDelete("/delete/doctor/{id}")]
         public async Task<IActionResult> DeleteDoctor(int id)
         {
+            Logger.Instance.LogInfo($"admin/delete/doctor/{id} - Delete Doctor");
+
             var doctor = await _unitOfWork.Doctors.GetAsync(id);
-            if (doctor == null)
-                return NotFound("Doctor not found");
+            if (doctor is null)
+            {
+                Logger.Instance.LogError($"admin/delete/doctor/{id} - Doctor not found");
+                return NotFound();
+            }
 
 
             var appointments = _unitOfWork.Appointments.Query()
@@ -118,6 +166,8 @@ namespace ClinicAppointmentSystem.Controllers
 
             _unitOfWork.Doctors.Remove(doctor);
             await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess($"admin/delete/doctor/{id} - Doctor deleted successfully");
 
             return Ok(new { Message = "Doctor deleted successfully" });
         }
