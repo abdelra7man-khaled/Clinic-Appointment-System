@@ -4,8 +4,5 @@
     {
         Cash,
         CreditCard,
-        DebitCard,
-        OnlineTransfer,
-        MobilePayment
     }
 }
