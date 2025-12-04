@@ -1,5 +1,6 @@
 <Solution>
   <Project Path="Clinic.DataAccess/Clinic.DataAccess.csproj" />
   <Project Path="Clinic.Models/Clinic.Models.csproj" />
+  <Project Path="Clinic.Services/Clinic.Services.csproj" Id="3972450a-ddea-45a9-8060-acd76f463248" />
   <Project Path="ClinicAppointmentSystem/ClinicAppointmentSystem.csproj" />
 </Solution>

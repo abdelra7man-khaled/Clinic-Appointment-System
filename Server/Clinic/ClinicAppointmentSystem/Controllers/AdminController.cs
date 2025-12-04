@@ -2,6 +2,7 @@
 using Clinic.Models;
 using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
+using Clinic.Services.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
@@ -16,6 +17,8 @@ namespace ClinicAppointmentSystem.Controllers
         [HttpGet("doctors")]
         public IActionResult GetAllDoctors()
         {
+            Logger.Instance.LogInfo("/admin/doctors/ - Fetching all doctors with specialties");
+
             var doctors = _unitOfWork.Doctors.Query()
                         .Include(d => d.User)
                         .Include(d => d.DoctorSpecialties)
@@ -29,6 +32,7 @@ namespace ClinicAppointmentSystem.Controllers
                             Email = d.User.Email,
                             Specialties = d.DoctorSpecialties.Select(ds => ds.Specialty.Name).ToList()
                         });
+            Logger.Instance.LogSuccess("/admin/doctors/ - Successfully fetched all doctors with specialties");
 
             return Ok(doctors);
         }
@@ -36,6 +40,7 @@ namespace ClinicAppointmentSystem.Controllers
         [HttpPost("add/doctors")]
         public async Task<IActionResult> AddDoctor([FromBody] AddDoctorDto doctorDto)
         {
+            Logger.Instance.LogInfo("/admin/add/doctors/ - Add new doctor");
 
             var user = new ApplicationUser
             {
