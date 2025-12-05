@@ -1,4 +1,4 @@
-🏥 Clinic Management System
+#🏥 Clinic Management System
 
 A complete backend system built using ASP.NET Core Web API, implementing clean architecture, design patterns, secure authentication, robust appointment management, payment handling, doctor–patient workflows, and more.
 
