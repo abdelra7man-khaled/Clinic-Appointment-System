@@ -35,13 +35,13 @@ namespace ClinicAppointmentSystem.Controllers
             var context = paymentDto.PaymentMethod switch
             {
                 PaymentMethod.Cash => new PaymentContext(new CashPaymentStrategy()),
-                PaymentMethod.CreditCard => new PaymentContext(new CreditCardPaymentStrategy()),
+                PaymentMethod.CreditCard => new PaymentContext(new CreditCardPaymentStrategyProxy()),
                 _ => new PaymentContext(new CashPaymentStrategy())
             };
 
             var paid = context.Pay(paymentDto.Amount,
                 patient,
-                paymentDto.PaymentMethod == PaymentMethod.CreditCard ? paymentDto.CardDetails : null);
+                paymentDto.PaymentMethod == PaymentMethod.CreditCard ? paymentDto.CardDetails : null!);
 
             if (!paid)
             {

@@ -6,7 +6,7 @@ namespace Clinic.Services.Payments
 {
     public class CashPaymentStrategy : IPaymentStrategy
     {
-        public bool Pay(decimal totalAmount, Patient patient, PaymentDetails? PaymentDetails = null)
+        public bool Pay(decimal totalAmount, Patient patient, PaymentDetails PaymentDetails = null)
         {
             if (patient.Balance < totalAmount)
             {
