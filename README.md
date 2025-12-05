@@ -167,6 +167,3 @@ Payment saved to database
 
 A receipt DTO is returned
 
-Strategy, Factory, Proxy, Singleton Patterns
-
-📁 Project Structure
