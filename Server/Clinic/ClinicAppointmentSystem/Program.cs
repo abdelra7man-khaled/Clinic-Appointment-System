@@ -1,6 +1,7 @@
 using Clinic.DataAccess.Data;
 using Clinic.DataAccess.Repository;
 using Clinic.DataAccess.Repository.IRepository;
+using Clinic.Services.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -49,6 +50,7 @@ namespace ClinicAppointmentSystem
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
             });
             builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             var app = builder.Build();
 
