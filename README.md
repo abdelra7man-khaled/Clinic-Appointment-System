@@ -1,13 +1,13 @@
-#🏥 Clinic Management System
+🏥 Clinic Management System – ASP.NET Core Web API
 
-A complete backend system built using ASP.NET Core Web API, implementing clean architecture, design patterns, secure authentication, robust appointment management, payment handling, doctor–patient workflows, and more.
+A powerful, scalable backend system for clinic operations, built using ASP.NET Core Web API, applying clean architecture, design patterns, secure authentication, appointment handling, payments, and complete doctor–patient workflows.
 
-🚀 Features
-👤 Authentication & Roles
+🚀 Core Features
+👤 Authentication & Role-Based Access
 
-Register & Login using JWT
+Secure JWT authentication
 
-Roles:
+Supported roles:
 
 Admin
 
@@ -19,29 +19,31 @@ Patient
 
 View personal profile (/patient/me)
 
-Book appointments using Appointment Factory (Regular, Follow-Up, Emergency)
+Book appointments via Appointment Factory:
+
+Regular
+
+Follow-Up
+
+Emergency
 
 Cancel appointments
 
 Make payments (Cash / Credit Card)
 
-View payment receipts
+View receipts & payment history
 
-Payment history
-
-Each new patient receives a random wallet balance
+New patients get a random wallet balance (from preset values)
 
 🩺 Doctor Features
 
 Manage personal profile
 
-View schedule / appointments
+View personal schedule & appointments
 
-View assigned specialties
+View & update specialties
 
-Update specialties
-
-Doctor dashboard APIs
+Doctor dashboard endpoints
 
 🛠 Admin Features
 
@@ -49,29 +51,30 @@ Add / remove doctors
 
 Add specialties
 
-View all doctors
+View doctor list & specialties
 
-Manage appointments
+Manage all appointments
 
-Manage payments (dashboard)
+Payment & reports dashboard
 
-Global audit logging using Singleton Logger
+Centralized audit logging (Singleton Logger)
 
-🧠 Applied Design Patterns
+🧠 Design Patterns Used
 ✔ Singleton Pattern
 
-Used to implement Logger.Instance to centralize logging across all controllers.
-Logs display in Console only, no files used.
+Logger.Instance used across controllers
 
-✔ Strategy Pattern (Payments)
+Logs to console
 
-Used to handle different payment strategies:
+✔ Strategy Pattern (Payment Handling)
+
+Payment strategies:
 
 CashPaymentStrategy
 
-CreditCardPaymentStrategy (validated through proxy)
+CreditCardPaymentStrategy
 
-Allows flexible extension of payment types.
+Allows adding new payment types easily.
 
 ✔ Proxy Pattern (Credit Card Validation)
 
@@ -82,21 +85,21 @@ Card number
 CVV
 
 Expiry date
-Using dummy stored card list.
+(using dummy stored card data)
 
-The real payment strategy is executed only if the proxy approves.
+Executes the real strategy only when validated.
 
 ✔ Simple Factory Pattern (Appointments)
 
-AppointmentFactory creates appointment objects based on type:
+AppointmentFactory creates:
 
-Regular
+Regular appointments
 
-Emergency (adds fee multiplier)
+Emergency (fee multiplier)
 
 Follow-Up (discount applied)
 
-Ensures consistent creation logic across the system.
+Ensures consistent appointment creation logic.
 
 📦 Technologies Used
 
@@ -108,11 +111,11 @@ SQL Server
 
 JWT Authentication
 
-Design Patterns (Factory, Strategy, Proxy, Singleton)
+Repository Pattern + Unit of Work
 
-LINQ, Repository Pattern, Unit of Work
+LINQ
 
-📁 Project Architecture
+📁 Project Structure
 
 /Controllers
     AdminController.cs
@@ -130,34 +133,40 @@ LINQ, Repository Pattern, Unit of Work
         PaymentContext.cs
 
     /Factory
-        AppointmentFactory.cs
+         AppointmentFactory.cs
 
-   /Logging
-        Logger.cs (Singleton)
+    /Logging
+        Logger.cs  (Singleton)
 
+/Models
+    /DTOs
+    /Enums
 
-/Models 
-  /DTOs
-  /Enums
-
-/Data  
-  /Repositories
-  AppDbContext
-  /Migrations
+/Data
+    /Repositories
+    AppDbContext
+    /Migrations
 
 💳 Payment Flow Summary
 
-Patient sends payment request
+Patient sends a payment request
 
-PaymentContext selects proper strategy
+PaymentContext selects appropriate strategy
 
-If credit card → request passes to CreditCardProxy
+If payment is credit card:
 
-Proxy validates card
+Request is validated using CreditCardProxy
 
-If valid:
-✔ Amount deducted
-✔ Appointment status updated
-✔ Payment saved
+If card is valid:
 
-Receipt returned  
+Amount deducted from wallet
+
+Appointment status updated
+
+Payment saved to database
+
+A receipt DTO is returned
+
+Strategy, Factory, Proxy, Singleton Patterns
+
+📁 Project Structure
