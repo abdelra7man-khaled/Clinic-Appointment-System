@@ -1,7 +1,10 @@
 using Clinic.DataAccess.Data;
 using Clinic.DataAccess.Repository;
 using Clinic.DataAccess.Repository.IRepository;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace ClinicAppointmentSystem
@@ -12,13 +15,33 @@ namespace ClinicAppointmentSystem
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
 
             builder.Services.AddControllers().AddJsonOptions(options =>
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
             });
-            // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            }).AddJwtBearer(options =>
+            {
+                var jwtSettings = builder.Configuration.GetSection("JwtSettings");
+
+                options.TokenValidationParameters = new()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = jwtSettings["Issuer"],
+                    ValidAudience = jwtSettings["Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(jwtSettings["SecretKey"]!))
+                };
+            });
+
+            builder.Services.AddAuthorization();
             builder.Services.AddOpenApi();
 
             builder.Services.AddDbContext<AppDbContext>(options =>
@@ -29,7 +52,6 @@ namespace ClinicAppointmentSystem
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -37,6 +59,9 @@ namespace ClinicAppointmentSystem
 
             app.UseHttpsRedirection();
 
+            app.UseRouting();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

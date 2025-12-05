@@ -8,7 +8,7 @@ namespace Clinic.Services.Payments
 {
     public class CreditCardPaymentStrategyProxy : IPaymentStrategy
     {
-        private readonly IPaymentStrategy _creditCardPaymentStrategy;
+        private readonly CreditCardPaymentStrategy _creditCardPaymentStrategy;
 
         private ReadOnlyCollection<ActualCreditCards> CreditCards = new ReadOnlyCollection<ActualCreditCards>(
                  new List<ActualCreditCards>
@@ -19,7 +19,7 @@ namespace Clinic.Services.Payments
                  }
              );
 
-        public bool Pay(decimal totalAmount, Patient patient, PaymentDetails? PaymentDetails = null)
+        public bool Pay(decimal totalAmount, Patient patient, PaymentDetails PaymentDetails)
         {
             if (ValidateCreditCard(PaymentDetails))
             {
