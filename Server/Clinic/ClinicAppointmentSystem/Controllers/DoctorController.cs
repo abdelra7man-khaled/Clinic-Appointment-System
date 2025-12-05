@@ -2,6 +2,7 @@
 using Clinic.Models;
 using Clinic.Models.DTOs;
 using Clinic.Services.Logging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,6 +10,7 @@ namespace ClinicAppointmentSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Doctor,Admin")]
     public class DoctorController(IUnitOfWork _unitOfWork) : ControllerBase
     {
         [HttpGet("all")]

@@ -3,6 +3,7 @@ using Clinic.Models;
 using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
 using Clinic.Services.Logging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Text;
@@ -11,6 +12,7 @@ namespace ClinicAppointmentSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Admin")]
     public class AdminController(IUnitOfWork _unitOfWork) : ControllerBase
     {
 

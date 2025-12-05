@@ -1,6 +1,7 @@
 ﻿using Clinic.DataAccess.Repository.IRepository;
 using Clinic.Models.Enums;
 using Clinic.Services.Logging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +9,7 @@ namespace ClinicAppointmentSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Doctor,Admin")]
     public class AppointmentController(IUnitOfWork _unitOfWork) : ControllerBase
     {
         [HttpGet("doctor/{doctorId}/schedule")]

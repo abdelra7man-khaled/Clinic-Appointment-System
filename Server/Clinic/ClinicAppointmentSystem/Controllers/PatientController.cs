@@ -3,6 +3,7 @@ using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
 using Clinic.Services.Appointments;
 using Clinic.Services.Logging;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -11,6 +12,7 @@ namespace ClinicAppointmentSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize(Roles = "Patient")]
     public class PatientController(IUnitOfWork _unitOfWork) : ControllerBase
     {
         [HttpGet("me")]
@@ -55,7 +57,7 @@ namespace ClinicAppointmentSystem.Controllers
 
             if (isOverlap)
             {
-                Logger.Instance.LogError("/patient/appointments/book - Time slot not available");
+                Logger.Instance.LogWarning("/patient/appointments/book - Time slot not available");
                 return BadRequest();
             }
 
