@@ -11,8 +11,4 @@
     <ProjectReference Include="..\Clinic.Models\Clinic.Models.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Payments\" />
-  </ItemGroup>
-
 </Project>
