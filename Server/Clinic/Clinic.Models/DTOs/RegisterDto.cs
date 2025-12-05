@@ -11,6 +11,11 @@ namespace Clinic.Models.DTOs
         public string Email;
         [Required]
         public string Password;
-        Role Role;
+        [Required]
+        public string FullName;
+
+        public string? PhoneNumber;
+        public string? Biography;
+        public Role Role;
     }
 }
