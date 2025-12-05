@@ -1,6 +1,5 @@
 ﻿using Clinic.Models.Enums;
 
-
 namespace Clinic.Models.DTOs
 {
     public class PaymentDto

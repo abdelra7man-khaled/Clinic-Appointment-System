@@ -1,4 +1,5 @@
 ﻿using Clinic.Models;
+using Clinic.Models.DTOs;
 using Clinic.Services.Logging;
 
 namespace Clinic.Services.Payments
@@ -14,7 +15,8 @@ namespace Clinic.Services.Payments
             }
 
             patient.Balance -= totalAmount;
-            Logger.Instance.LogInfo($"Cash payment successful. New Balance: {patient.Balance})            
+
+            Logger.Instance.LogInfo($"Cash payment successful. New Balance: {patient.Balance}");
             return true;
         }
     }

@@ -1,4 +1,5 @@
 ﻿using Clinic.Models;
+using Clinic.Models.DTOs;
 using Clinic.Services.Logging;
 using System.Collections.ObjectModel;
 using System.Globalization;

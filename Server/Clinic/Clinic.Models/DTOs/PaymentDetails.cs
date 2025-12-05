@@ -1,4 +1,4 @@
-﻿namespace Clinic.Services.Payments
+﻿namespace Clinic.Models.DTOs
 {
     public class PaymentDetails
     {

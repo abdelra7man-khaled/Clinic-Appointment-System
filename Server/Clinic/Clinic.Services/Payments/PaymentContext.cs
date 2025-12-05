@@ -1,4 +1,5 @@
 ﻿using Clinic.Models;
+using Clinic.Models.DTOs;
 
 namespace Clinic.Services.Payments
 {

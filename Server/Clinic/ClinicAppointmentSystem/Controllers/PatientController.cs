@@ -2,6 +2,7 @@
 using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
 using Clinic.Services.Appointments;
+using Clinic.Services.Logging;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -15,6 +16,8 @@ namespace ClinicAppointmentSystem.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
+            Logger.Instance.LogInfo("/patient/me - Show Patient Porfile");
+
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var patient = _unitOfWork.Patients.Query().Include(p => p.User).FirstOrDefault(p => p.UserId == userId);
             if (patient == null)
@@ -34,10 +37,15 @@ namespace ClinicAppointmentSystem.Controllers
         [HttpPost("appointments/book")]
         public async Task<IActionResult> Book([FromBody] AppointmentCreateDto appointmentRequest)
         {
+            Logger.Instance.LogInfo($"/patient/appointments/book - Patient Book Appointment");
+
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.UserId == userId);
             if (patient == null)
-                return BadRequest("patient not exist");
+            {
+                Logger.Instance.LogError("/patient/appointments/book - patient not exist");
+                return BadRequest();
+            }
 
 
             // check if exist booking in this time slot
@@ -46,7 +54,10 @@ namespace ClinicAppointmentSystem.Controllers
                     && a.StartTime < appointmentRequest.EndTime && appointmentRequest.StartTime < a.EndTime);
 
             if (isOverlap)
-                return BadRequest("Time slot not available");
+            {
+                Logger.Instance.LogError("/patient/appointments/book - Time slot not available");
+                return BadRequest();
+            }
 
 
             var newAppointment = AppointmentFactory.CreateAppointment(
@@ -61,12 +72,15 @@ namespace ClinicAppointmentSystem.Controllers
 
             await _unitOfWork.Appointments.AddAsync(newAppointment);
             await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess($"/patient/appointments/book - Patient {patient.Id} Book Appointment {newAppointment.Id}");
             return Ok(newAppointment);
         }
 
         [HttpGet("appointments")]
         public IActionResult MyAppointments()
         {
+            Logger.Instance.LogInfo($"/patient/appointments - Fetching Patient Appointments");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var patient = _unitOfWork.Patients.Query()
                                     .Include(p => p.Appointments)
@@ -74,7 +88,13 @@ namespace ClinicAppointmentSystem.Controllers
                                     .FirstOrDefault(p => p.UserId == userId);
 
             if (patient is null)
+            {
+                Logger.Instance.LogError("/patient/appointments - patient not exist");
                 return NotFound("patient not found");
+            }
+
+
+            Logger.Instance.LogSuccess($"/patient/appointments - Patient {patient.Id} Fetch His Appointments Successfully");
 
             return Ok(patient.Appointments
                 .OrderBy(a => a.StartTime)
@@ -92,21 +112,30 @@ namespace ClinicAppointmentSystem.Controllers
         [HttpPost("appointments/{id}/cancel")]
         public async Task<IActionResult> CancelAppointment(int id)
         {
+            Logger.Instance.LogInfo($"/patient/appointments/{id}/cancel - Patient Cancel Request Appointment {id}");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.UserId == userId);
             if (patient is null)
+            {
+                Logger.Instance.LogError("/patient/appointments/{id}/cancel - patient not exist");
                 return BadRequest("Patient not found");
+            }
 
             var appointment = _unitOfWork.Appointments.Query()
                 .FirstOrDefault(a => a.Id == id && a.PatientId == patient.Id);
 
             if (appointment is null)
+            {
+                Logger.Instance.LogError("/patient/appointments/{id}/cancel - appointment not exist");
                 return NotFound("Appointment not found");
+            }
 
             appointment.Status = AppointmentStatus.Cancelled;
             _unitOfWork.Appointments.Update(appointment);
             await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess($"/patient/appointments/{id}/cancel - Patient {patient.Id} Cancel Appointment {appointment.Id}");
 
             return Ok(new { message = "Appointment cancelled successfully", appointment });
         }
