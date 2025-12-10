@@ -59,7 +59,7 @@ namespace ClinicAppointmentSystem.Controllers
             var appointment = await _unitOfWork.Appointments.GetAsync(id);
             if (appointment is null)
             {
-                Logger.Instance.LogError("/appointment/{id}/cancel - Appointment not found");
+                Logger.Instance.LogError($"/appointment/{id}/cancel - Appointment not found");
                 return NotFound();
             }
 
@@ -81,7 +81,7 @@ namespace ClinicAppointmentSystem.Controllers
             if (appointment is null)
             {
                 Logger.Instance.LogError("/appointment/{id}/delete - Appointment not found");
-                return NotFound("Appointment not found");
+                return NotFound();
             }
 
             var payment = _unitOfWork.Payments.Query()

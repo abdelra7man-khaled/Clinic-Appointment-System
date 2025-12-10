@@ -92,7 +92,7 @@ namespace ClinicAppointmentSystem.Controllers
             if (patient is null)
             {
                 Logger.Instance.LogError("/patient/appointments - patient not exist");
-                return NotFound("patient not found");
+                return NotFound();
             }
 
 
@@ -121,7 +121,7 @@ namespace ClinicAppointmentSystem.Controllers
             if (patient is null)
             {
                 Logger.Instance.LogError("/patient/appointments/{id}/cancel - patient not exist");
-                return BadRequest("Patient not found");
+                return BadRequest();
             }
 
             var appointment = _unitOfWork.Appointments.Query()
@@ -130,7 +130,7 @@ namespace ClinicAppointmentSystem.Controllers
             if (appointment is null)
             {
                 Logger.Instance.LogError("/patient/appointments/{id}/cancel - appointment not exist");
-                return NotFound("Appointment not found");
+                return NotFound();
             }
 
             appointment.Status = AppointmentStatus.Cancelled;
