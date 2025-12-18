@@ -21,7 +21,7 @@ artifacts/
 # EF Core / Database
 # =========================
 # Optional: ignore migrations if you regenerate them in dev
-#Migrations/
+**/Migrations/
 *.mdf
 *.ldf
 *.ndf
