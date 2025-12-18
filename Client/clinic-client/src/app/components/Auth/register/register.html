@@ -1,1 +1,17 @@
-<p>register works!</p>
+<div class="auth-card">
+  <h2>Register</h2>
+
+  <input placeholder="Username" formControlName="username">
+  <input placeholder="Email" formControlName="email">
+  <input placeholder="Password" type="password" formControlName="password">
+  <input placeholder="Full Name" formControlName="fullName">
+
+  <select formControlName="role">
+    <option *ngFor="let r of roles" [value]="r">{{ r }}</option>
+  </select>
+
+  <input *ngIf="isPatient()" placeholder="Phone Number" formControlName="phoneNumber">
+  <textarea *ngIf="isDoctor()" placeholder="Biography" formControlName="biography"></textarea>
+
+  <button (click)="register()">Register</button>
+</div>
