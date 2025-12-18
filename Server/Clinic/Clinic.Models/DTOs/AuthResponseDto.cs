@@ -7,6 +7,7 @@ namespace Clinic.Models.DTOs
         public string Token { get; set; }
         public string Username { get; set; }
         public Role Role { get; set; }
+        public bool IsProfileComplete { get; set; }
 
         public AuthResponseDto(string token, string username, Role role)
         {

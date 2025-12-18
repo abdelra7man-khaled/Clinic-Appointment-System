@@ -97,7 +97,27 @@ namespace Clinic.Services.Authentication
                 throw new ServiceException("Invalid credentials");
 
             var token = GenerateToken(user);
-            return new AuthResponseDto(token, user.Username, user.Role);
+            var isProfileComplete = true;
+
+            if (user.Role == Role.Patient)
+            {
+                var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.UserId == user.Id);
+                if (patient != null)
+                {
+                    isProfileComplete = !string.IsNullOrEmpty(patient.Gender) &&
+                                        patient.DateOfBirth.HasValue &&
+                                        !string.IsNullOrEmpty(patient.PhoneNumber);
+                }
+                else
+                {
+                    isProfileComplete = false; 
+                }
+            }
+
+            return new AuthResponseDto(token, user.Username, user.Role)
+            {
+                IsProfileComplete = isProfileComplete
+            };
         }
 
     }

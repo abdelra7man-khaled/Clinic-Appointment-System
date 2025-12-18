@@ -16,6 +16,7 @@ namespace Clinic.DataAccess.Repository
 
         public IRepository<Payment> Payments { get; }
         public IRepository<Review> Reviews { get; }
+        public IRepository<PatientFavorite> PatientFavorites { get; }
 
         public UnitOfWork(AppDbContext context)
         {
@@ -28,6 +29,7 @@ namespace Clinic.DataAccess.Repository
             Appointments = new Repository<Appointment>(_context);
             Payments = new Repository<Payment>(_context);
             Reviews = new Repository<Review>(_context);
+            PatientFavorites = new Repository<PatientFavorite>(_context);
         }
         public async Task<int> SaveChangesAsync()
             => await _context.SaveChangesAsync();

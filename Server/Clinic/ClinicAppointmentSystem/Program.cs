@@ -21,6 +21,7 @@ namespace ClinicAppointmentSystem
             {
                 options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+                options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles;
             });
 
             builder.Services.AddAuthentication(options =>
@@ -62,6 +63,7 @@ namespace ClinicAppointmentSystem
             }
 
             app.UseHttpsRedirection();
+            app.UseStaticFiles();
 
             app.UseRouting();
 

@@ -14,6 +14,7 @@ namespace Clinic.DataAccess.Data
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<PatientFavorite> PatientFavorites { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -64,6 +65,14 @@ namespace Clinic.DataAccess.Data
             modelBuilder.Entity<Appointment>()
                         .Property(a => a.Fee)
                         .HasColumnType("decimal(18,2)");
+                        
+            modelBuilder.Entity<Doctor>()
+                .Property(d => d.AverageRating)
+                .HasColumnType("decimal(3,2)");
+
+            modelBuilder.Entity<Doctor>()
+                .Property(d => d.ConsultationFee)
+                .HasColumnType("decimal(18,2)");
 
             modelBuilder.Entity<Payment>()
                         .Property(p => p.Amount)
@@ -80,6 +89,29 @@ namespace Clinic.DataAccess.Data
                 .WithMany()
                 .HasForeignKey(r => r.DoctorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PatientFavorite>()
+                .HasKey(pf => new { pf.PatientId, pf.DoctorId });
+
+            modelBuilder.Entity<PatientFavorite>()
+                .HasOne(pf => pf.Patient)
+                .WithMany(p => p.Favorites)
+                .HasForeignKey(pf => pf.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PatientFavorite>()
+                .HasOne(pf => pf.Doctor)
+                .WithMany()
+                .HasForeignKey(pf => pf.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<Patient>()
+                .Property(p => p.Height)
+                .HasColumnType("decimal(5,2)");
+                
+             modelBuilder.Entity<Patient>()
+                .Property(p => p.Weight)
+                .HasColumnType("decimal(5,2)");
 
             base.OnModelCreating(modelBuilder);
         }

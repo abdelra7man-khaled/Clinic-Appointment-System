@@ -12,6 +12,7 @@ namespace Clinic.DataAccess.Repository.IRepository
         IRepository<Appointment> Appointments { get; }
         IRepository<Payment> Payments { get; }
         IRepository<Review> Reviews { get; }
+        IRepository<PatientFavorite> PatientFavorites { get; }
         Task<int> SaveChangesAsync();
     }
 }
