@@ -4,9 +4,9 @@ namespace Clinic.Models.DTOs
 {
     public class AuthResponseDto
     {
-        public string Token;
-        public string Username;
-        public Role Role;
+        public string Token { get; }
+        public string Username { get; }
+        public Role Role { get; }
 
         public AuthResponseDto(string Token, string Username, Role Role)
         {
