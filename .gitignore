@@ -95,3 +95,24 @@ BundleArtifacts/
 
 
 ClinicUML.png
+
+
+
+# Angular build outputs
+client/clinic-client/dist/
+client/clinic-client/out-tsc/
+client/clinic-client/.angular/
+
+# Node modules
+client/clinic-client/node_modules/
+
+# IDE files (optional)
+client/clinic-client/.vscode/
+client/clinic-client/.idea/
+
+# Environment files
+client/clinic-client/src/environments/environment*.ts
+
+# Logs
+client/clinic-client/*.log
+client/clinic-client/npm-debug.log*
