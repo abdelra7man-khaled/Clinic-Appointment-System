@@ -90,11 +90,11 @@ namespace ClinicAppointmentSystem.Controllers
             }));
         }
 
-        [HttpGet("admin/payments/dashboard")]
+        [HttpGet("history")]
         [Authorize(Roles = "Admin")]
         public IActionResult AdminDashboard()
         {
-            Logger.Instance.LogInfo("/payments/admin/payments/dashboard - Show all Payments History");
+            Logger.Instance.LogInfo("/payments/history - Show all Payments History");
 
             var payments = _unitOfWork.Payments.Query()
                 .Include(p => p.Appointment)

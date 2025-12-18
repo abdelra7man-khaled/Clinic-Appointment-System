@@ -49,7 +49,7 @@ namespace ClinicAppointmentSystem.Controllers
                 Username = doctorDto.Username,
                 Email = doctorDto.Email,
                 Role = Role.Doctor,
-                PasswordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes("Default@123"))
+                PasswordHash = Convert.ToBase64String(Encoding.UTF8.GetBytes("123456"))
             };
 
             await _unitOfWork.Users.AddAsync(user);
