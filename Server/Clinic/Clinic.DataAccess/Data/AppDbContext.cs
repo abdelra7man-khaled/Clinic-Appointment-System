@@ -13,6 +13,7 @@ namespace Clinic.DataAccess.Data
         public DbSet<DoctorSchedule> DoctorSchedules { get; set; }
         public DbSet<Appointment> Appointments { get; set; }
         public DbSet<Payment> Payments { get; set; }
+        public DbSet<Review> Reviews { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
         {
@@ -55,6 +56,30 @@ namespace Clinic.DataAccess.Data
 
             modelBuilder.Entity<ApplicationUser>().HasIndex(u => u.Username).IsUnique();
             modelBuilder.Entity<ApplicationUser>().HasIndex(u => u.Email).IsUnique();
+
+            modelBuilder.Entity<Patient>()
+                        .Property(p => p.Balance)
+                        .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Appointment>()
+                        .Property(a => a.Fee)
+                        .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Payment>()
+                        .Property(p => p.Amount)
+                        .HasColumnType("decimal(18,2)");
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Patient)
+                .WithMany()
+                .HasForeignKey(r => r.PatientId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Doctor)
+                .WithMany()
+                .HasForeignKey(r => r.DoctorId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             base.OnModelCreating(modelBuilder);
         }

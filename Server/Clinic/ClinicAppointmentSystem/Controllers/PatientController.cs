@@ -1,6 +1,7 @@
 ﻿using Clinic.DataAccess.Repository.IRepository;
 using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
+using Clinic.Models;
 using Clinic.Services.Appointments;
 using Clinic.Services.Logging;
 using Microsoft.AspNetCore.Authorization;
@@ -18,7 +19,7 @@ namespace ClinicAppointmentSystem.Controllers
         [HttpGet("me")]
         public IActionResult Me()
         {
-            Logger.Instance.LogInfo("/patient/me - Show Patient Porfile");
+            Logger.Instance.LogInfo("/patient/me - Show Patient Profile");
 
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
             var patient = _unitOfWork.Patients.Query().Include(p => p.User).FirstOrDefault(p => p.UserId == userId);
@@ -140,6 +141,53 @@ namespace ClinicAppointmentSystem.Controllers
             Logger.Instance.LogSuccess($"/patient/appointments/{id}/cancel - Patient {patient.Id} Cancel Appointment {appointment.Id}");
 
             return Ok(new { message = "Appointment cancelled successfully", appointment });
+        }
+        [HttpPost("doctors/rate")]
+        public async Task<IActionResult> RateDoctor([FromBody] ReviewDto reviewDto)
+        {
+            Logger.Instance.LogInfo("/patient/doctors/rate - Submitting review");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.UserId == userId);
+            
+            if (patient == null) return BadRequest("Patient profile not found");
+
+            var review = new Review
+            {
+                PatientId = patient.Id,
+                DoctorId = reviewDto.DoctorId,
+                Rating = reviewDto.Rating,
+                Comment = reviewDto.Comment
+            };
+
+            await _unitOfWork.Reviews.AddAsync(review);
+            await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess("/patient/doctors/rate - Review submitted successfully");
+            return Ok("Review submitted successfully");
+        }
+
+        [HttpGet("doctors/top")]
+        public IActionResult GetTopRatedDoctors()
+        {
+            Logger.Instance.LogInfo("/patient/doctors/top - Fetching top rated doctors");
+            
+            var topDoctors = _unitOfWork.Doctors.Query()
+                .Select(d => new
+                {
+                    d.Id,
+                    d.FullName,
+                    d.Biography,
+                    AverageRating = _unitOfWork.Reviews.Query().Where(r => r.DoctorId == d.Id).Any() 
+                                    ? _unitOfWork.Reviews.Query().Where(r => r.DoctorId == d.Id).Average(r => r.Rating) 
+                                    : 0,
+                    ReviewCount = _unitOfWork.Reviews.Query().Count(r => r.DoctorId == d.Id)
+                })
+                .OrderByDescending(d => d.AverageRating)
+                .Take(5)
+                .ToList();
+
+            Logger.Instance.LogSuccess("/patient/doctors/top - Successfully fetched top rated doctors");
+            return Ok(topDoctors);
         }
     }
 }

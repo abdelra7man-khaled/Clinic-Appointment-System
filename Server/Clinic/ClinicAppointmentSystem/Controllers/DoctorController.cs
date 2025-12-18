@@ -5,22 +5,31 @@ using Clinic.Services.Logging;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ClinicAppointmentSystem.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Doctor,Admin")]
+    [Authorize]
     public class DoctorController(IUnitOfWork _unitOfWork) : ControllerBase
     {
         [HttpGet("all")]
-        public IActionResult GetAll()
+        public IActionResult GetAll([FromQuery] int? limit)
         {
             Logger.Instance.LogInfo("doctor/all - Fetching all doctors with specialties");
 
-            var doctors = _unitOfWork.Doctors.Query()
+            IQueryable<Doctor> query = _unitOfWork.Doctors.Query()
                                 .Include(d => d.User)
-                                .ToList()
+                                .Include(d => d.DoctorSpecialties)
+                                .ThenInclude(ds => ds.Specialty);
+
+            if (limit.HasValue)
+            {
+                query = query.Take(limit.Value);
+            }
+
+            var doctors = query.ToList()
                                 .Select(d => new
                                 {
                                     d.Id,
@@ -63,6 +72,7 @@ namespace ClinicAppointmentSystem.Controllers
         }
 
         [HttpPut("{id}/update")]
+        [Authorize(Roles = "Doctor,Admin")]
         public async Task<IActionResult> UpdateDoctor(int id, [FromBody] UpdateDoctorDto updateDoctorDto)
         {
             Logger.Instance.LogInfo($"doctor/{id}/update - Updating doctor information");
@@ -72,6 +82,14 @@ namespace ClinicAppointmentSystem.Controllers
             {
                 Logger.Instance.LogError($"doctor/{id}/update - Doctor not found");
                 return NotFound();
+            }
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin && doctor.UserId != userId)
+            {
+                return Forbid();
             }
 
             doctor.FullName = updateDoctorDto.FullName ?? doctor.FullName;
@@ -86,6 +104,7 @@ namespace ClinicAppointmentSystem.Controllers
         }
 
         [HttpPut("{id}/specialties/update")]
+        [Authorize(Roles = "Doctor,Admin")]
         public async Task<IActionResult> UpdateSpecialties(int id, [FromBody] UpdateDoctorSpecialtiesDto updateDoctorSpecialtiesDto)
         {
             Logger.Instance.LogInfo($"doctor/{id}/specialties/update - Updating doctor specialties");
@@ -98,6 +117,14 @@ namespace ClinicAppointmentSystem.Controllers
             {
                 Logger.Instance.LogError($"doctor/{id}/specialties/update - Doctor not found");
                 return NotFound();
+            }
+
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var isAdmin = User.IsInRole("Admin");
+
+            if (!isAdmin && doctor.UserId != userId)
+            {
+                return Forbid();
             }
 
             var oldSpecialties = doctor.DoctorSpecialties.ToList();

@@ -11,6 +11,7 @@ namespace Clinic.DataAccess.Repository.IRepository
         IRepository<DoctorSpecialty> DoctorSpecialties { get; }
         IRepository<Appointment> Appointments { get; }
         IRepository<Payment> Payments { get; }
+        IRepository<Review> Reviews { get; }
         Task<int> SaveChangesAsync();
     }
 }

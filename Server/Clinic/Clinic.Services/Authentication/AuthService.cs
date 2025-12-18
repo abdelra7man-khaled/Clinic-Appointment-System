@@ -1,4 +1,5 @@
 ﻿using Clinic.DataAccess.Repository.IRepository;
+using Clinic.Services.Exceptions;
 using Clinic.Models;
 using Clinic.Models.DTOs;
 using Clinic.Models.Enums;
@@ -44,7 +45,7 @@ namespace Clinic.Services.Authentication
             var exists = _unitOfWork.Users.Query().Any(u => u.Username == registerDto.Username ||
                                                         u.Email == registerDto.Email);
             if (exists)
-                throw new Exception("User already exists");
+                throw new ServiceException("User already exists");
 
             var user = new ApplicationUser
             {
@@ -89,11 +90,11 @@ namespace Clinic.Services.Authentication
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var hash = Hash(dto.Password);
-            var user = _unitOfWork.Users.Query().FirstOrDefault(u => u.Username == dto.Username &&
+            var user = _unitOfWork.Users.Query().FirstOrDefault(u => (u.Username == dto.Username || u.Email == dto.Username) &&
                                                                 u.PasswordHash == hash);
 
             if (user is null)
-                throw new Exception("Invalid credentials");
+                throw new ServiceException("Invalid credentials");
 
             var token = GenerateToken(user);
             return new AuthResponseDto(token, user.Username, user.Role);
