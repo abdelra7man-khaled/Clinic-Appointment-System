@@ -4,11 +4,11 @@ namespace Clinic.Models.DTOs
 {
     public class AppointmentCreateDto
     {
-        public int DoctorId;
-        public DateTime StartTime;
-        public DateTime EndTime;
-        public AppointmentType AppointmentType;
-        public decimal Fee;
-        public string Notes;
+        public int DoctorId { get; set; }
+        public DateTime StartTime { get; set; }
+        public DateTime EndTime { get; set; }
+        public AppointmentType AppointmentType { get; set; }
+        public decimal Fee { get; set; }
+        public string Notes { get; set; }
     }
 }
