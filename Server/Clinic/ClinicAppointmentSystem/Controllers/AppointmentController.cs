@@ -12,6 +12,7 @@ namespace ClinicAppointmentSystem.Controllers
     [Authorize(Roles = "Doctor,Admin")]
     public class AppointmentController(IUnitOfWork _unitOfWork) : ControllerBase
     {
+
         [HttpGet("doctor/{doctorId}/schedule")]
         public IActionResult DoctorSchedule(int doctorId, DateTime? dateFrom = null, DateTime? dateTo = null)
         {

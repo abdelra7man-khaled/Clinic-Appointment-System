@@ -92,3 +92,6 @@ publish/
 *.appxbundle
 AppPackages/
 BundleArtifacts/
+
+
+ClinicUML.png

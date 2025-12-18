@@ -32,7 +32,7 @@ namespace Clinic.Services.Payments
         }
 
 
-        public bool ValidateCreditCard(PaymentDetails PaymentDetails)
+        private bool ValidateCreditCard(PaymentDetails PaymentDetails)
         {
             DateTime expiryDate;
             bool isValid = DateTime.TryParseExact(
