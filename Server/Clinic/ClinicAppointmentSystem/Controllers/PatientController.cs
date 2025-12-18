@@ -227,7 +227,9 @@ namespace ClinicAppointmentSystem.Controllers
                 .OrderBy(a => a.StartTime)
                 .Select(a => new
                 {
+                    a.Id,
                     DoctorName = a.Doctor.FullName,
+                    DoctorPhoto = a.Doctor.PhotoUrl, 
                     a.StartTime,
                     a.EndTime,
                     a.Status,
