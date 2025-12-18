@@ -1,6 +1,7 @@
 ﻿using Clinic.Models;
 using Clinic.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using System.Text;
 
 namespace Clinic.DataAccess.Data
 {
@@ -76,7 +77,7 @@ namespace Clinic.DataAccess.Data
                     Id = 1,
                     Username = "admin",
                     Email = "admin@clinic.com",
-                    PasswordHash = "admin-hash",
+                    PasswordHash = Hash("123456"),
                     Role = Role.Admin
                 },
                 new ApplicationUser
@@ -84,7 +85,7 @@ namespace Clinic.DataAccess.Data
                     Id = 2,
                     Username = "abdelrahman",
                     Email = "abdelrahman@clinic.com",
-                    PasswordHash = "123456",
+                    PasswordHash = Hash("123456"),
                     Role = Role.Doctor
                 },
                 new ApplicationUser
@@ -92,7 +93,7 @@ namespace Clinic.DataAccess.Data
                     Id = 3,
                     Username = "ahmed",
                     Email = "ahmed@clinic.com",
-                    PasswordHash = "123456",
+                    PasswordHash = Hash("123456"),
                     Role = Role.Patient
                 },
                  new ApplicationUser
@@ -100,7 +101,7 @@ namespace Clinic.DataAccess.Data
                      Id = 4,
                      Username = "amr",
                      Email = "amr@clinic.com",
-                     PasswordHash = "123456",
+                     PasswordHash = Hash("123456"),
                      Role = Role.Doctor
                  },
                  new ApplicationUser
@@ -108,7 +109,7 @@ namespace Clinic.DataAccess.Data
                      Id = 5,
                      Username = "samy",
                      Email = "samy@clinic.com",
-                     PasswordHash = "123456",
+                     PasswordHash = Hash("123456"),
                      Role = Role.Doctor
                  }
             );
@@ -231,6 +232,11 @@ namespace Clinic.DataAccess.Data
                     PaidAt = new DateTime(2025, 5, 15, 6, 40, 0)
                 }
             );
+        }
+
+        private static string Hash(string password)
+        {
+            return Convert.ToBase64String(Encoding.UTF8.GetBytes(password));
         }
 
 
