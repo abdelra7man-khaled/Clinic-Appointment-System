@@ -110,7 +110,7 @@ namespace Clinic.DataAccess.Data
                      Username = "samy",
                      Email = "samy@clinic.com",
                      PasswordHash = Hash("123456"),
-                     Role = Role.Doctor
+                     Role = Role.Patient
                  }
             );
         }
