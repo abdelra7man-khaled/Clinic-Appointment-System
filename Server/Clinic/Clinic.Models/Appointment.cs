@@ -18,5 +18,7 @@ namespace Clinic.Models
         public AppointmentType AppointmentType { get; set; }
         public decimal Fee { get; set; }
         public string Notes { get; set; }
+        public bool IsPaid { get; set; }
+        public string? PaymentTransactionId { get; set; }
     }
 }

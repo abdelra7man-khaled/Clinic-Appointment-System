@@ -14,6 +14,7 @@ namespace Clinic.Models
         public int TotalPatients { get; set; }
         public int ExperienceYears { get; set; }
         public decimal ConsultationFee { get; set; }
+        public decimal Balance { get; set; }
         public string? PhotoUrl { get; set; }
         public ICollection<DoctorSpecialty> DoctorSpecialties { get; set; }
         public ICollection<Appointment> Appointments { get; set; }

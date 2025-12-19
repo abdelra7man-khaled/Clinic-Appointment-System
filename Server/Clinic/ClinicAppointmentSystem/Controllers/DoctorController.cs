@@ -483,5 +483,46 @@ namespace ClinicAppointmentSystem.Controllers
             Logger.Instance.LogSuccess($"/doctor/appointments/{id}/status - Successfully updated status");
             return Ok(new { Message = "Status updated successfully", Status = appointment.Status.ToString() });
         }
+
+        [HttpGet("patients")]
+        public IActionResult GetMyPatients()
+        {
+            Logger.Instance.LogInfo("/doctor/patients - Fetching associated patients");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var doctor = _unitOfWork.Doctors.Query().FirstOrDefault(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            var patients = _unitOfWork.Appointments.Query()
+                .Where(a => a.DoctorId == doctor.Id)
+                .Include(a => a.Patient)
+                .ThenInclude(p => p.User)
+                .Select(a => a.Patient)
+                .Distinct()
+                .ToList();
+
+            var patientDtos = patients.Select(patient => new PatientSummaryDto
+            {
+                Id = patient.Id,
+                Username = patient.User.Username,
+                Email = patient.User.Email,
+                FullName = patient.FullName,
+                FirstName = patient.FirstName,
+                LastName = patient.LastName,
+                Gender = patient.Gender,
+                DateOfBirth = patient.DateOfBirth,
+                Age = patient.DateOfBirth.HasValue ? (int)((DateTime.Now - patient.DateOfBirth.Value).TotalDays / 365.25) : null,
+                BloodType = patient.BloodType,
+                Height = patient.Height,
+                Weight = patient.Weight,
+                Address = patient.Address,
+                Allergies = patient.Allergies,
+                PhoneNumber = patient.PhoneNumber,
+                IsProfileComplete = !string.IsNullOrEmpty(patient.Gender) && patient.DateOfBirth.HasValue && !string.IsNullOrEmpty(patient.PhoneNumber)
+            }).ToList();
+
+            Logger.Instance.LogSuccess($"/doctor/patients - Successfully fetched {patientDtos.Count} patients");
+            return Ok(patientDtos);
+        }
     }
 }
