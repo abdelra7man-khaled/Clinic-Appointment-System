@@ -25,6 +25,7 @@ namespace ClinicAppointmentSystem.Controllers
                 .Include(d => d.User)
                 .Include(d => d.DoctorSpecialties).ThenInclude(ds => ds.Specialty)
                 .Include(d => d.Schedules)
+                .Include(d => d.Appointments)
                 .FirstOrDefault(d => d.UserId == userId);
 
             if (doctor == null) return NotFound("Doctor profile not found");
@@ -49,31 +50,41 @@ namespace ClinicAppointmentSystem.Controllers
                     End = s.End.ToString(@"hh\:mm"),
                     IsBlocked = s.IsBlocked
                 }).ToList()
+        .Concat((doctor.Appointments ?? Enumerable.Empty<Appointment>())
+            .Where(a => a.Status == AppointmentStatus.Confirmed)
+                    .Select(a => new DoctorScheduleDto
+                    {
+                        Day = a.StartTime.DayOfWeek.ToString(),
+                        Start = a.StartTime.ToString("HH:mm"),
+                        End = a.EndTime.ToString("HH:mm"),
+                        IsBlocked = true // Appointments are treated as blocked time
+                    }))
+                .ToList()
             };
 
             Logger.Instance.LogSuccess("/doctor/me - Successfully fetched doctor profile");
             return Ok(dto);
         }
 
-        [HttpPut("profile")]
+        [HttpPatch("me")]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateDoctorDto dto)
         {
-            Logger.Instance.LogInfo("/doctor/profile - Updating doctor profile");
+            Logger.Instance.LogInfo("/doctor/me - Updating doctor profile (PATCH)");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
 
             var doctor = await _unitOfWork.Doctors.Query().FirstOrDefaultAsync(d => d.UserId == userId);
 
             if (doctor == null) return NotFound("Doctor profile not found");
 
-            doctor.FullName = dto.FullName ?? doctor.FullName;
-            doctor.Biography = dto.Biography ?? doctor.Biography;
-            if (dto.ExperienceYears > 0) doctor.ExperienceYears = dto.ExperienceYears;
-            if (dto.ConsultationFee > 0) doctor.ConsultationFee = dto.ConsultationFee;
+            if (!string.IsNullOrEmpty(dto.FullName)) doctor.FullName = dto.FullName;
+            if (dto.Biography != null) doctor.Biography = dto.Biography; // Allow empty string to clear bio? Assuming yes.
+            if (dto.ExperienceYears.HasValue) doctor.ExperienceYears = dto.ExperienceYears.Value;
+            if (dto.ConsultationFee.HasValue) doctor.ConsultationFee = dto.ConsultationFee.Value;
 
             _unitOfWork.Doctors.Update(doctor);
             await _unitOfWork.SaveChangesAsync();
 
-            Logger.Instance.LogSuccess("/doctor/profile - Successfully updated doctor profile");
+            Logger.Instance.LogSuccess("/doctor/me - Successfully updated doctor profile");
             return Ok("Profile updated successfully");
         }
 
@@ -248,8 +259,8 @@ namespace ClinicAppointmentSystem.Controllers
 
             doctor.FullName = updateDoctorDto.FullName ?? doctor.FullName;
             doctor.Biography = updateDoctorDto.Biography ?? doctor.Biography;
-            if(updateDoctorDto.ExperienceYears > 0) doctor.ExperienceYears = updateDoctorDto.ExperienceYears;
-            if(updateDoctorDto.ConsultationFee > 0) doctor.ConsultationFee = updateDoctorDto.ConsultationFee;
+            if(updateDoctorDto.ExperienceYears.HasValue) doctor.ExperienceYears = updateDoctorDto.ExperienceYears.Value;
+            if(updateDoctorDto.ConsultationFee.HasValue) doctor.ConsultationFee = updateDoctorDto.ConsultationFee.Value;
 
             _unitOfWork.Doctors.Update(doctor);
             await _unitOfWork.SaveChangesAsync();
@@ -300,6 +311,43 @@ namespace ClinicAppointmentSystem.Controllers
 
             Logger.Instance.LogSuccess($"doctor/{id}/specialties/update - Successfully updated doctor specialties");
 
+            return Ok("Specialties updated successfully");
+        }
+
+        [HttpPut("me/specialties")]
+        public async Task<IActionResult> UpdateMySpecialties([FromBody] UpdateDoctorSpecialtiesDto dto)
+        {
+            Logger.Instance.LogInfo("/doctor/me/specialties - Updating my specialties");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var doctor = _unitOfWork.Doctors.Query().Include(d => d.DoctorSpecialties).FirstOrDefault(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+
+            var oldSpecialties = doctor.DoctorSpecialties.ToList();
+            
+            // Validate that all specialty IDs exist
+            var validSpecialtyIds = _unitOfWork.Specialties.Query().Select(s => s.Id).ToList();
+            var invalidIds = dto.SpecialtyIds.Except(validSpecialtyIds).ToList();
+
+            if (invalidIds.Any())
+            {
+                return BadRequest($"Invalid Specialty IDs: {string.Join(", ", invalidIds)}");
+            }
+
+            _unitOfWork.DoctorSpecialties.RemoveRange(oldSpecialties);
+
+            foreach (var specialtyId in dto.SpecialtyIds)
+            {
+                await _unitOfWork.DoctorSpecialties.AddAsync(new DoctorSpecialty
+                {
+                    DoctorId = doctor.Id,
+                    SpecialtyId = specialtyId
+                });
+            }
+
+            await _unitOfWork.SaveChangesAsync();
+            Logger.Instance.LogSuccess("/doctor/me/specialties - Successfully updated specialties");
             return Ok("Specialties updated successfully");
         }
 
@@ -416,7 +464,8 @@ namespace ClinicAppointmentSystem.Controllers
                     a.EndTime,
                     a.Status,
                     a.Notes,
-                    a.AppointmentType
+                    a.AppointmentType,
+                    a.IsPaid
                 })
                 .ToList();
 
@@ -453,7 +502,8 @@ namespace ClinicAppointmentSystem.Controllers
                     a.EndTime,
                     a.Status,
                     a.Notes,
-                    a.AppointmentType
+                    a.AppointmentType,
+                    a.IsPaid
                 })
                 .ToList();
 
@@ -523,6 +573,44 @@ namespace ClinicAppointmentSystem.Controllers
 
             Logger.Instance.LogSuccess($"/doctor/patients - Successfully fetched {patientDtos.Count} patients");
             return Ok(patientDtos);
+        }
+
+        [HttpPost("schedules")]
+        public async Task<IActionResult> SetSchedule([FromBody] SetScheduleDto scheduleDto)
+        {
+            Logger.Instance.LogInfo($"/doctor/schedules - Setting doctor schedule for Day {scheduleDto.Day}");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var doctor = _unitOfWork.Doctors.Query().Include(d => d.Schedules).FirstOrDefault(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            if (!TimeSpan.TryParse(scheduleDto.Start, out var startTs) || !TimeSpan.TryParse(scheduleDto.End, out var endTs))
+            {
+                return BadRequest($"Invalid time format. Use HH:mm");
+            }
+
+            if (startTs >= endTs) return BadRequest($"Start time must be before End time");
+
+            // Check if schedule exists for this day and remove it (Upsert)
+            var existingSchedule = doctor.Schedules.FirstOrDefault(s => s.Day == scheduleDto.Day);
+            if (existingSchedule != null)
+            {
+                _unitOfWork.DoctorSchedules.Remove(existingSchedule);
+            }
+
+            await _unitOfWork.DoctorSchedules.AddAsync(new DoctorSchedule
+            {
+                DoctorId = doctor.Id,
+                Day = scheduleDto.Day,
+                Start = startTs,
+                End = endTs,
+                IsBlocked = scheduleDto.IsBlocked
+            });
+
+            await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess("/doctor/schedules - Successfully updated schedule");
+            return Ok("Schedule updated successfully");
         }
     }
 }

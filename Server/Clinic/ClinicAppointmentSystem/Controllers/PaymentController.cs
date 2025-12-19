@@ -7,6 +7,7 @@ using Clinic.Services.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace ClinicAppointmentSystem.Controllers
 {
@@ -19,12 +20,24 @@ namespace ClinicAppointmentSystem.Controllers
         public async Task<IActionResult> Pay([FromBody] PaymentDto paymentDto)
         {
             Logger.Instance.LogInfo("/payments/pay/ - Making Payment Process");
+
+            // If PatientId is missing and user is a Patient, infer from token
+            if (paymentDto.PatientId == 0 && User.IsInRole("Patient"))
+            {
+                var userIdStr = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (int.TryParse(userIdStr, out int userId))
+                {
+                    var p = _unitOfWork.Patients.Query().FirstOrDefault(x => x.UserId == userId);
+                    if (p != null) paymentDto.PatientId = p.Id;
+                }
+            }
+
             var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.Id == paymentDto.PatientId);
 
             if (patient is null)
             {
-                Logger.Instance.LogError("/payments/pay/ - Patient not found");
-                return NotFound();
+                Logger.Instance.LogError($"/payments/pay/ - Patient not found (ID: {paymentDto.PatientId})");
+                return NotFound("Patient not found. Please provide valid PatientId or log in as Patient.");
             }
 
             var appointment = await _unitOfWork.Appointments.GetAsync(paymentDto.AppointmentId);

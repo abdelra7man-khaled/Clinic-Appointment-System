@@ -8,6 +8,7 @@ namespace Clinic.DataAccess.Repository.IRepository
         IRepository<Patient> Patients { get; }
         IRepository<Doctor> Doctors { get; }
         IRepository<Specialty> Specialties { get; }
+        IRepository<DoctorSchedule> DoctorSchedules { get; }
         IRepository<DoctorSpecialty> DoctorSpecialties { get; }
         IRepository<Appointment> Appointments { get; }
         IRepository<Payment> Payments { get; }

@@ -11,6 +11,7 @@ namespace Clinic.DataAccess.Repository
         public IRepository<Patient> Patients { get; }
         public IRepository<Doctor> Doctors { get; }
         public IRepository<Specialty> Specialties { get; }
+        public IRepository<DoctorSchedule> DoctorSchedules { get; }
         public IRepository<DoctorSpecialty> DoctorSpecialties { get; }
         public IRepository<Appointment> Appointments { get; }
 
@@ -25,6 +26,7 @@ namespace Clinic.DataAccess.Repository
             Patients = new Repository<Patient>(_context);
             Doctors = new Repository<Doctor>(_context);
             Specialties = new Repository<Specialty>(_context);
+            DoctorSchedules = new Repository<DoctorSchedule>(_context);
             DoctorSpecialties = new Repository<DoctorSpecialty>(_context);
             Appointments = new Repository<Appointment>(_context);
             Payments = new Repository<Payment>(_context);
