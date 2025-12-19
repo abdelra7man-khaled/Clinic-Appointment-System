@@ -21,7 +21,9 @@ namespace ClinicAppointmentSystem.Controllers
         {
             Logger.Instance.LogInfo("/patient/me - Fetching patient profile");
             var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var patient = _unitOfWork.Patients.Query().FirstOrDefault(p => p.UserId == userId);
+            var patient = _unitOfWork.Patients.Query()
+                .Include(p => p.User)
+                .FirstOrDefault(p => p.UserId == userId);
 
             if (patient == null) return NotFound("Patient profile not found");
 
@@ -29,7 +31,7 @@ namespace ClinicAppointmentSystem.Controllers
             {
                 Id = patient.Id,
                 Username = User.FindFirst(ClaimTypes.Name)!.Value,
-                Email = string.Empty, 
+                Email = patient.User.Email, 
                 FullName = patient.FullName,
                 FirstName = patient.FirstName,
                 LastName = patient.LastName,
@@ -134,7 +136,7 @@ namespace ClinicAppointmentSystem.Controllers
             if (patient == null) return NotFound("Patient not found");
 
             var now = DateTime.UtcNow;
-            var upcomingWindow = now.AddDays(30);
+            var upcomingWindow = now.AddDays(3);
 
             var appointments = _unitOfWork.Appointments.Query()
                 .Where(a => a.PatientId == patient.Id && a.StartTime >= now && a.StartTime <= upcomingWindow)
@@ -228,6 +230,7 @@ namespace ClinicAppointmentSystem.Controllers
                 .Select(a => new
                 {
                     a.Id,
+                    a.DoctorId,
                     DoctorName = a.Doctor.FullName,
                     DoctorPhoto = a.Doctor.PhotoUrl, 
                     a.StartTime,

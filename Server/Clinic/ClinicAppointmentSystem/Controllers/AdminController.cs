@@ -110,17 +110,20 @@ namespace ClinicAppointmentSystem.Controllers
         {
             Logger.Instance.LogInfo($"/admin/specialties/{id} - Fetch specialty");
 
-            var specialties = _unitOfWork.Specialties.Query()
+            var specialty = _unitOfWork.Specialties.Query()
+                .Where(s => s.Id == id)
                 .Select(s => new
                 {
                     s.Id,
                     s.Name
                 })
-                .ToList();
+                .FirstOrDefault();
+
+            if (specialty == null) return NotFound();
 
             Logger.Instance.LogSuccess($"/admin/specialties/{id} - Returned Required specialty successfully");
 
-            return Ok(specialties);
+            return Ok(specialty);
         }
 
         [HttpPost("specialty/add")]

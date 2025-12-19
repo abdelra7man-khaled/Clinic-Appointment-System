@@ -15,8 +15,70 @@ namespace ClinicAppointmentSystem.Controllers
     [Authorize]
     public class DoctorController(IUnitOfWork _unitOfWork) : ControllerBase
     {
+        [HttpGet("me")]
+        public IActionResult GetProfile()
+        {
+            Logger.Instance.LogInfo("/doctor/me - Fetching doctor profile");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            
+            var doctor = _unitOfWork.Doctors.Query()
+                .Include(d => d.User)
+                .Include(d => d.DoctorSpecialties).ThenInclude(ds => ds.Specialty)
+                .Include(d => d.Schedules)
+                .FirstOrDefault(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            var dto = new DoctorProfileDto
+            {
+                Id = doctor.Id,
+                Username = User.FindFirst(ClaimTypes.Name)!.Value,
+                FullName = doctor.FullName,
+                Email = doctor.User.Email,
+                Biography = doctor.Biography,
+                ExperienceYears = doctor.ExperienceYears,
+                ConsultationFee = doctor.ConsultationFee,
+                PhotoUrl = doctor.PhotoUrl,
+                AverageRating = doctor.AverageRating,
+                TotalPatients = doctor.TotalPatients,
+                Specialties = doctor.DoctorSpecialties.Select(ds => ds.Specialty.Name).ToList(),
+                Schedules = doctor.Schedules.Select(s => new DoctorScheduleDto
+                {
+                    Day = s.Day.ToString(),
+                    Start = s.Start.ToString(@"hh\:mm"),
+                    End = s.End.ToString(@"hh\:mm"),
+                    IsBlocked = s.IsBlocked
+                }).ToList()
+            };
+
+            Logger.Instance.LogSuccess("/doctor/me - Successfully fetched doctor profile");
+            return Ok(dto);
+        }
+
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateDoctorDto dto)
+        {
+            Logger.Instance.LogInfo("/doctor/profile - Updating doctor profile");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+
+            var doctor = await _unitOfWork.Doctors.Query().FirstOrDefaultAsync(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            doctor.FullName = dto.FullName ?? doctor.FullName;
+            doctor.Biography = dto.Biography ?? doctor.Biography;
+            if (dto.ExperienceYears > 0) doctor.ExperienceYears = dto.ExperienceYears;
+            if (dto.ConsultationFee > 0) doctor.ConsultationFee = dto.ConsultationFee;
+
+            _unitOfWork.Doctors.Update(doctor);
+            await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess("/doctor/profile - Successfully updated doctor profile");
+            return Ok("Profile updated successfully");
+        }
+
         [HttpGet("all")]
-        public IActionResult GetAll([FromQuery] int? limit)
+        public IActionResult GetAll([FromQuery] int? limit, [FromQuery] int? specialtyId)
         {
             Logger.Instance.LogInfo("doctor/all - Fetching all doctors with specialties");
 
@@ -24,6 +86,11 @@ namespace ClinicAppointmentSystem.Controllers
                                 .Include(d => d.User)
                                 .Include(d => d.DoctorSpecialties)
                                 .ThenInclude(ds => ds.Specialty);
+
+            if (specialtyId.HasValue)
+            {
+                query = query.Where(d => d.DoctorSpecialties.Any(ds => ds.SpecialtyId == specialtyId));
+            }
 
             if (limit.HasValue)
             {
@@ -115,6 +182,15 @@ namespace ClinicAppointmentSystem.Controllers
             return Ok(result);
         }
 
+        [HttpGet("specialties")]
+        public IActionResult GetSpecialties()
+        {
+            Logger.Instance.LogInfo("doctor/specialties - Fetching all specialties");
+            var specialties = _unitOfWork.Specialties.Query().ToList();
+            Logger.Instance.LogSuccess("doctor/specialties - Successfully fetched all specialties");
+            return Ok(specialties);
+        }
+
 
         [HttpGet("{id}")]
         public IActionResult GetById(int id)
@@ -157,7 +233,7 @@ namespace ClinicAppointmentSystem.Controllers
         }
 
         [HttpPut("{id}/update")]
-        [Authorize(Roles = "Doctor,Admin")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateDoctor(int id, [FromBody] UpdateDoctorDto updateDoctorDto)
         {
             Logger.Instance.LogInfo($"doctor/{id}/update - Updating doctor information");
@@ -167,14 +243,6 @@ namespace ClinicAppointmentSystem.Controllers
             {
                 Logger.Instance.LogError($"doctor/{id}/update - Doctor not found");
                 return NotFound();
-            }
-
-            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
-            var isAdmin = User.IsInRole("Admin");
-
-            if (!isAdmin && doctor.UserId != userId)
-            {
-                return Forbid();
             }
 
 
