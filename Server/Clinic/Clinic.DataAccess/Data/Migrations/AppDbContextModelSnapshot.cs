@@ -76,12 +76,18 @@ namespace Clinic.DataAccess.Data.Migrations
                     b.Property<decimal>("Fee")
                         .HasColumnType("decimal(18,2)");
 
+                    b.Property<bool>("IsPaid")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Notes")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("PatientId")
                         .HasColumnType("int");
+
+                    b.Property<string>("PaymentTransactionId")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("StartTime")
                         .HasColumnType("datetime2");
@@ -108,6 +114,9 @@ namespace Clinic.DataAccess.Data.Migrations
 
                     b.Property<decimal>("AverageRating")
                         .HasColumnType("decimal(3,2)");
+
+                    b.Property<decimal>("Balance")
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("Biography")
                         .HasColumnType("nvarchar(max)");
@@ -272,6 +281,9 @@ namespace Clinic.DataAccess.Data.Migrations
 
                     b.Property<int>("AppointmentId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsConfirmed")
+                        .HasColumnType("bit");
 
                     b.Property<DateTime>("PaidAt")
                         .HasColumnType("datetime2");

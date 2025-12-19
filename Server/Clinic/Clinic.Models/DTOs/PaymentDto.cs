@@ -8,6 +8,6 @@ namespace Clinic.Models.DTOs
         public int AppointmentId { get; set; }
         public decimal Amount { get; set; }
         public PaymentMethod PaymentMethod { get; set; }
-        public PaymentDetails CardDetails { get; set; }
+        public PaymentDetails? CardDetails { get; set; }
     }
 }

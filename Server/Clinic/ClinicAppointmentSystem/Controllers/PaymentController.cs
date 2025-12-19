@@ -34,36 +34,73 @@ namespace ClinicAppointmentSystem.Controllers
                 return NotFound();
             }
 
-            var context = paymentDto.PaymentMethod switch
-            {
-                PaymentMethod.Cash => new PaymentContext(new CashPaymentStrategy()),
-                PaymentMethod.CreditCard => new PaymentContext(new CreditCardPaymentStrategyProxy()),
-                _ => new PaymentContext(new CashPaymentStrategy())
-            };
-
-            var paid = context.Pay(paymentDto.Amount,
-                patient,
-                paymentDto.PaymentMethod == PaymentMethod.CreditCard ? paymentDto.CardDetails : null!);
-
-            if (!paid)
-            {
-                Logger.Instance.LogError("/payments/pay/ - Payment failed. Check balance or credit card details.");
-                return BadRequest();
-            }
-
+            // In a real scenario, we might verify credit card validty here without charging yet,
+            // or put a hold. For this flow, we just record the attempt.
+            
             var payment = new Payment
             {
                 AppointmentId = paymentDto.AppointmentId,
                 Amount = paymentDto.Amount,
                 PaymentMethod = paymentDto.PaymentMethod,
-                PaidAt = DateTime.UtcNow
+                PaidAt = DateTime.UtcNow,
+                IsConfirmed = false // Pending Admin Confirmation
             };
 
             await _unitOfWork.Payments.AddAsync(payment);
             await _unitOfWork.SaveChangesAsync();
+            
+            // Link Payment to Appointment immediately so we can track it
+            appointment.PaymentTransactionId = payment.Id.ToString();
+            _unitOfWork.Appointments.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
 
-            Logger.Instance.LogSuccess($"/payments/pay/ - Payment Procces Made By {patient.Id} with Amount {payment.Amount}");
-            return Ok(payment);
+            Logger.Instance.LogSuccess($"/payments/pay/ - Payment Request Created By {patient.Id} with Amount {payment.Amount}. Waiting for Admin Confirmation.");
+            return Ok(new { Message = "Payment recorded. Waiting for Admin confirmation.", PaymentId = payment.Id });
+        }
+
+        [HttpPost("confirm/{paymentId}")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ConfirmPayment(int paymentId)
+        {
+            Logger.Instance.LogInfo($"/payments/confirm/{paymentId} - Admin Confirming Payment");
+
+            var payment = await _unitOfWork.Payments.GetAsync(paymentId);
+            if (payment == null) return NotFound("Payment not found");
+
+            if (payment.IsConfirmed) return BadRequest("Payment already confirmed");
+
+            var appointment = _unitOfWork.Appointments.Query()
+                                                    .Include(a => a.Doctor)
+                                                    .Include(a => a.Patient)
+                                                    .FirstOrDefault(a => a.Id == payment.AppointmentId);
+
+            if (appointment == null) return BadRequest("Associated appointment not found");
+
+            // 1. Deduct from Patient Balance
+            if (appointment.Patient.Balance < payment.Amount)
+            {
+                return BadRequest("Insufficient patient balance");
+            }
+            appointment.Patient.Balance -= payment.Amount;
+
+            // 2. Add to Doctor Balance
+            appointment.Doctor.Balance += payment.Amount;
+
+            // 3. Mark Payment Confirmed
+            payment.IsConfirmed = true;
+
+            // 4. Mark Appointment Paid
+            appointment.IsPaid = true;
+
+            _unitOfWork.Patients.Update(appointment.Patient);
+            _unitOfWork.Doctors.Update(appointment.Doctor);
+            _unitOfWork.Payments.Update(payment);
+            _unitOfWork.Appointments.Update(appointment);
+
+            await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess($"/payments/confirm/{paymentId} - Payment Confirmed. Transferred {payment.Amount} from {appointment.Patient.FullName} to Dr. {appointment.Doctor.FullName}");
+            return Ok("Payment confirmed and balances updated");
         }
 
         [HttpGet("patient/{patientId}")]
