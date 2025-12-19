@@ -14,19 +14,12 @@ namespace Clinic.Services.Appointments
             decimal baseFee,
             string notes = "")
         {
-            decimal finalFee = baseFee;
-
-            switch (type)
+            decimal finalFee = type switch
             {
-                case AppointmentType.Emergency:
-                    finalFee *= 1.5m;
-                    break;
-                case AppointmentType.FollowUp:
-                    finalFee *= 0.8m;
-                    break;
-                default:
-                    break;
-            }
+                AppointmentType.Emergency => baseFee * 1.5m,
+                AppointmentType.FollowUp => baseFee * 0.8m,
+                _ => baseFee,
+            };
 
             return new Appointment
             {

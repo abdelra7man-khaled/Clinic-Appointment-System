@@ -25,27 +25,27 @@
             }
         }
 
-        public void Log(string message, LogType logtype)
+        private void Log(string message, LogType logType)
         {
-            if (logtype == LogType.INFO)
+            if (logType == LogType.INFO)
             {
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"{logType.ToString()}: [{DateTime.Now}] {message}");
             }
-            else if (logtype == LogType.SUCCESS)
+            else if (logType == LogType.SUCCESS)
             {
                 Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
+                Console.WriteLine($"{logType.ToString()}: [{DateTime.Now}] {message}");
             }
-            else if (logtype == LogType.ERROR)
+            else if (logType == LogType.ERROR)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
+                Console.WriteLine($"{logType.ToString()}: [{DateTime.Now}] {message}");
             }
             else
             {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"{logtype.ToString()}: [{DateTime.Now}] {message}");
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine($"{logType.ToString()}: [{DateTime.Now}] {message}");
             }
 
             Console.ResetColor();
