@@ -49,24 +49,19 @@ namespace Clinic.Services.Payments
             }
 
             if (PaymentDetails.CardNumber.Length != 16 ||
-                PaymentDetails.CVV.Length != 3 ||
+                (PaymentDetails.CVV.Length != 3 && int.TryParse(PaymentDetails.CVV, out int cvv)) ||
                 expiryDate < DateTime.Now
                 )
             {
                 return false;
             }
+            bool isValidCard = CreditCards.Any(card =>
+                card.CardNumber == PaymentDetails.CardNumber &&
+                card.CVV == PaymentDetails.CVV &&
+                card.ExpiryDate == expiryDate
+            );
 
-            foreach (var card in CreditCards)
-            {
-                if (PaymentDetails.CardNumber == card.CardNumber &&
-                    PaymentDetails.CVV == card.CVV &&
-                    expiryDate == card.ExpiryDate
-                   )
-                {
-                    return true;
-                }
-            }
-            return false;
+            return isValidCard;
         }
 
 

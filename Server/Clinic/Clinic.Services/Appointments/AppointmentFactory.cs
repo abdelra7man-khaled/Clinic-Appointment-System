@@ -14,6 +14,7 @@ namespace Clinic.Services.Appointments
             decimal baseFee,
             string notes = "")
         {
+
             decimal finalFee = type switch
             {
                 AppointmentType.Emergency => baseFee * 1.5m,
