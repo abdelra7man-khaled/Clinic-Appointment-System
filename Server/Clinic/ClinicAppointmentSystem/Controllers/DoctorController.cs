@@ -392,5 +392,96 @@ namespace ClinicAppointmentSystem.Controllers
             return Ok(result);
         }
 
+        [HttpGet("appointments/upcoming")]
+        public IActionResult GetUpcomingAppointments()
+        {
+            Logger.Instance.LogInfo("/doctor/appointments/upcoming - Fetching upcoming appointments");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var doctor = _unitOfWork.Doctors.Query().FirstOrDefault(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            var now = DateTime.UtcNow;
+            var upcomingWindow = now.AddDays(3);
+
+            var appointments = _unitOfWork.Appointments.Query()
+                .Where(a => a.DoctorId == doctor.Id && a.StartTime >= now && a.StartTime <= upcomingWindow)
+                .Include(a => a.Patient)
+                .OrderBy(a => a.StartTime)
+                .Select(a => new
+                {
+                    a.Id,
+                    PatientName = a.Patient.FullName,
+                    a.StartTime,
+                    a.EndTime,
+                    a.Status,
+                    a.Notes,
+                    a.AppointmentType
+                })
+                .ToList();
+
+            Logger.Instance.LogSuccess("/doctor/appointments/upcoming - Successfully fetched upcoming appointments");
+            return Ok(appointments);
+        }
+
+        [HttpGet("appointments")]
+        public IActionResult GetAllAppointments([FromQuery] AppointmentStatus? status)
+        {
+            Logger.Instance.LogInfo($"/doctor/appointments - Fetching appointments (Filter: {status})");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var doctor = _unitOfWork.Doctors.Query().FirstOrDefault(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            var query = _unitOfWork.Appointments.Query()
+                .Where(a => a.DoctorId == doctor.Id)
+                .Include(a => a.Patient)
+                .AsQueryable();
+
+            if (status.HasValue)
+            {
+                query = query.Where(a => a.Status == status.Value);
+            }
+
+            var appointments = query
+                .OrderByDescending(a => a.StartTime)
+                .Select(a => new
+                {
+                    a.Id,
+                    PatientName = a.Patient.FullName,
+                    a.StartTime,
+                    a.EndTime,
+                    a.Status,
+                    a.Notes,
+                    a.AppointmentType
+                })
+                .ToList();
+
+            Logger.Instance.LogSuccess("/doctor/appointments - Successfully fetched appointments");
+            return Ok(appointments);
+        }
+
+        [HttpPut("appointments/{id}/status")]
+        public async Task<IActionResult> UpdateAppointmentStatus(int id, [FromBody] UpdateAppointmentStatusDto dto)
+        {
+            Logger.Instance.LogInfo($"/doctor/appointments/{id}/status - Updating status to {dto.Status}");
+            var userId = int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
+            var doctor = await _unitOfWork.Doctors.Query().FirstOrDefaultAsync(d => d.UserId == userId);
+
+            if (doctor == null) return NotFound("Doctor profile not found");
+
+            var appointment = await _unitOfWork.Appointments.GetAsync(id);
+
+            if (appointment == null) return NotFound("Appointment not found");
+
+            if (appointment.DoctorId != doctor.Id) return Forbid();
+
+            appointment.Status = dto.Status;
+            _unitOfWork.Appointments.Update(appointment);
+            await _unitOfWork.SaveChangesAsync();
+
+            Logger.Instance.LogSuccess($"/doctor/appointments/{id}/status - Successfully updated status");
+            return Ok(new { Message = "Status updated successfully", Status = appointment.Status.ToString() });
+        }
     }
 }
