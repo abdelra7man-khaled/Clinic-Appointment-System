@@ -10,7 +10,7 @@ namespace Clinic.Services.Payments
     {
         private readonly CreditCardPaymentStrategy _creditCardPaymentStrategy;
 
-        private ReadOnlyCollection<ActualCreditCards> CreditCards = new ReadOnlyCollection<ActualCreditCards>(
+        private ReadOnlyCollection<ActualCreditCards> CreditCards = new(
                  new List<ActualCreditCards>
                  {
                     new ActualCreditCards("1234567812345678", "887", new DateTime(2027, 11, 1)),
@@ -23,15 +23,13 @@ namespace Clinic.Services.Payments
         {
             if (ValidateCreditCard(PaymentDetails))
             {
-                Logger.Instance.LogWarning("Invalid Credit Card");
-                return false;
+                Logger.Instance.LogInfo("Valid Credit Card payment");
+                return _creditCardPaymentStrategy.Pay(totalAmount, patient, PaymentDetails);
             }
 
-            Logger.Instance.LogInfo("Valid Credit Card payment");
-            return _creditCardPaymentStrategy.Pay(totalAmount, patient, PaymentDetails);
+            Logger.Instance.LogWarning("Invalid Credit Card");
+            return false;
         }
-
-
         private bool ValidateCreditCard(PaymentDetails PaymentDetails)
         {
             DateTime expiryDate;
