@@ -59,6 +59,7 @@ namespace ClinicAppointmentSystem.Controllers
                 PaidAt = DateTime.UtcNow
             };
 
+            _unitOfWork.Patients.Update(patient);
             await _unitOfWork.Payments.AddAsync(payment);
             await _unitOfWork.SaveChangesAsync();
 
