@@ -203,7 +203,7 @@ namespace ClinicAppointmentSystem.Controllers
             }
 
             Logger.Instance.LogSuccess($"/patient/appointments/book - Patient {patient.Id} Book Appointment {newAppointment.Id}");
-            return Ok(newAppointment);
+            return Ok(new { Message = "Appointment booked successfully", AppointmentId = newAppointment.Id, Appointment = newAppointment });
         }
 
         [HttpGet("appointments")]

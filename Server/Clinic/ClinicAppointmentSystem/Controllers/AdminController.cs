@@ -145,7 +145,7 @@ namespace ClinicAppointmentSystem.Controllers
             return Ok(newSpecialty);
         }
 
-        [HttpDelete("/delete/doctor/{id}")]
+        [HttpDelete("/api/delete/doctor/{id}")]
         public async Task<IActionResult> DeleteDoctor(int id)
         {
             Logger.Instance.LogInfo($"admin/delete/doctor/{id} - Delete Doctor");
@@ -157,17 +157,61 @@ namespace ClinicAppointmentSystem.Controllers
                 return NotFound();
             }
 
-
+            // 1. Delete Appointments & Associated Payments
             var appointments = _unitOfWork.Appointments.Query()
                 .Where(a => a.DoctorId == doctor.Id)
                 .ToList();
-            _unitOfWork.Appointments.RemoveRange(appointments);
 
+            if (appointments.Any())
+            {
+                var appointmentIds = appointments.Select(a => a.Id).ToList();
+                var payments = _unitOfWork.Payments.Query()
+                    .Where(p => appointmentIds.Contains(p.AppointmentId))
+                    .ToList();
+                
+                if (payments.Any())
+                {
+                    _unitOfWork.Payments.RemoveRange(payments);
+                }
+
+                _unitOfWork.Appointments.RemoveRange(appointments);
+            }
+
+            // 2. Delete Specialties
             var specialties = _unitOfWork.DoctorSpecialties.Query()
                 .Where(ds => ds.DoctorId == doctor.Id)
                 .ToList();
-            _unitOfWork.DoctorSpecialties.RemoveRange(specialties);
+            if (specialties.Any())
+            {
+                _unitOfWork.DoctorSpecialties.RemoveRange(specialties);
+            }
 
+            // 3. Delete Reviews
+            var reviews = _unitOfWork.Reviews.Query()
+                .Where(r => r.DoctorId == doctor.Id)
+                .ToList();
+            if (reviews.Any())
+            {
+                _unitOfWork.Reviews.RemoveRange(reviews);
+            }
+
+            // 4. Delete Schedules
+            var schedules = _unitOfWork.DoctorSchedules.Query()
+                .Where(s => s.DoctorId == doctor.Id)
+                .ToList();
+            if (schedules.Any())
+            {
+                _unitOfWork.DoctorSchedules.RemoveRange(schedules);
+            }
+
+            // 5. Delete PatientFavorites
+            var favorites = _unitOfWork.PatientFavorites.Query()
+                .Where(f => f.DoctorId == doctor.Id)
+                .ToList();
+            if (favorites.Any())
+            {
+                _unitOfWork.PatientFavorites.RemoveRange(favorites);
+            }
 
             _unitOfWork.Doctors.Remove(doctor);
             await _unitOfWork.SaveChangesAsync();
@@ -175,6 +219,88 @@ namespace ClinicAppointmentSystem.Controllers
             Logger.Instance.LogSuccess($"admin/delete/doctor/{id} - Doctor deleted successfully");
 
             return Ok(new { Message = "Doctor deleted successfully" });
+        }
+        [HttpGet("dashboard/stats")]
+        public IActionResult GetDashboardStats()
+        {
+            Logger.Instance.LogInfo("/api/Admin/dashboard/stats - Fetching dashboard stats");
+
+            var totalPatients = _unitOfWork.Patients.Query().Count();
+            var totalDoctors = _unitOfWork.Doctors.Query().Count();
+            var totalAppointments = _unitOfWork.Appointments.Query().Count();
+            var totalRevenue = _unitOfWork.Payments.Query()
+                .Where(p => p.IsConfirmed)
+                .Sum(p => p.Amount);
+
+            var stats = new
+            {
+                TotalPatients = totalPatients,
+                TotalDoctors = totalDoctors,
+                TotalAppointments = totalAppointments,
+                TotalRevenue = totalRevenue
+            };
+
+            Logger.Instance.LogSuccess("/api/Admin/dashboard/stats - Successfully fetched dashboard stats");
+
+            return Ok(stats);
+        }
+
+        [HttpGet("patients")]
+        public IActionResult GetAllPatients()
+        {
+            Logger.Instance.LogInfo("/api/Admin/patients - Fetching all patients");
+
+            var patients = _unitOfWork.Patients.Query()
+                .Include(p => p.User)
+                .Select(p => new
+                {
+                    p.Id,
+                    p.FullName,
+                    p.Gender,
+                    p.DateOfBirth,
+                    p.PhoneNumber,
+                    p.Address,
+                    p.BloodType,
+                    p.Height,
+                    p.Weight,
+                    p.Allergies,
+                    Email = p.User.Email,
+                    Username = p.User.Username
+                })
+                .ToList();
+
+            Logger.Instance.LogSuccess($"/api/Admin/patients - Successfully fetched {patients.Count} patients");
+
+            return Ok(patients);
+        }
+
+        [HttpGet("appointments")]
+        public IActionResult GetAllAppointments()
+        {
+            Logger.Instance.LogInfo("/api/Admin/appointments - Fetching all appointments");
+
+            var appointments = _unitOfWork.Appointments.Query()
+                .Include(a => a.Patient)
+                .Include(a => a.Doctor)
+                .Select(a => new
+                {
+                    a.Id,
+                    PatientName = a.Patient.FullName,
+                    DoctorName = a.Doctor.FullName,
+                    a.StartTime,
+                    a.EndTime,
+                    Status = a.Status.ToString(),
+                    AppointmentType = a.AppointmentType.ToString(),
+                    a.Fee,
+                    a.Notes,
+                    a.IsPaid,
+                    a.PaymentTransactionId
+                })
+                .ToList();
+
+            Logger.Instance.LogSuccess($"/api/Admin/appointments - Successfully fetched {appointments.Count} appointments");
+
+            return Ok(appointments);
         }
     }
 }

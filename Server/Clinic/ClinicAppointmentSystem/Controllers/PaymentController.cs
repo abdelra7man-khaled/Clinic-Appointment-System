@@ -165,6 +165,7 @@ namespace ClinicAppointmentSystem.Controllers
                     p.Amount,
                     p.PaymentMethod,
                     p.PaidAt,
+                    p.IsConfirmed,
                     Patient = p.Appointment.Patient.FullName,
                     Doctor = p.Appointment.Doctor.FullName
                 })
